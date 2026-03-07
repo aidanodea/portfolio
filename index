@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoC Case Study — Autosave</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --bg-subtle: #141414;
+    --bg-card: #181818;
+    --border: #252525;
+    --text: #ede8df;
+    --text-muted: #6b6560;
+    --text-dim: #3a3835;
+    --accent: #c8a96e;
+    --accent-dim: rgba(200, 169, 110, 0.12);
+    --accent-border: rgba(200, 169, 110, 0.25);
+    --red: #c46a5a;
+    --green: #6a9e78;
+    --font-display: 'Lora', Georgia, serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 3rem;
+    background: rgba(13,13,13,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .nav-title {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+  }
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* SECTIONS */
+  section {
+    padding: 7rem 0;
+    border-bottom: 1px solid var(--border);
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 3rem;
+  }
+  .container-wide {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 3rem;
+  }
+
+  /* SECTION LABELS */
+  .section-index {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .section-index::after {
+    content: '';
+    flex: 1;
+    max-width: 40px;
+    height: 1px;
+    background: var(--border);
+  }
+  .section-tag {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    padding: 0.25rem 0.65rem;
+    border-radius: 2px;
+    display: inline-block;
+    margin-bottom: 1.5rem;
+  }
+
+  /* TYPOGRAPHY */
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 5vw, 3.8rem);
+    font-weight: 400;
+    line-height: 1.18;
+    letter-spacing: -0.01em;
+    margin-bottom: 1.5rem;
+  }
+  h1 em { font-style: italic; color: var(--accent); }
+  h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 400;
+    line-height: 1.25;
+    margin-bottom: 1.25rem;
+  }
+  h3 {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+  }
+  p {
+    color: #c4bfb7;
+    font-size: 1rem;
+    line-height: 1.8;
+    max-width: 62ch;
+  }
+  p + p { margin-top: 1rem; }
+
+  /* HERO */
+  #hero {
+    padding: 12rem 0 7rem;
+    opacity: 1;
+    transform: none;
+  }
+  .hero-kicker {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .hero-kicker::before {
+    content: '';
+    width: 32px;
+    height: 1px;
+    background: var(--accent);
+  }
+  .hero-stat {
+    margin-top: 3.5rem;
+    padding: 2rem 2.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    max-width: 580px;
+  }
+  .hero-stat-number {
+    font-family: var(--font-mono);
+    font-size: 2.8rem;
+    font-weight: 500;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .hero-stat-label {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+
+  /* TRIANGULATION */
+  .signal-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 3rem;
+  }
+  .signal-cell {
+    background: var(--bg-card);
+    padding: 2rem;
+    position: relative;
+  }
+  .signal-number {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    color: var(--text-dim);
+    margin-bottom: 1.25rem;
+    display: block;
+  }
+  .signal-type {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+  .signal-cell h3 {
+    font-size: 1rem;
+    margin-bottom: 0.65rem;
+  }
+  .signal-cell p {
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: var(--text-muted);
+    max-width: none;
+  }
+  .signal-quote {
+    margin-top: 1.25rem;
+    padding: 1rem 1.25rem;
+    background: rgba(255,255,255,0.025);
+    border-left: 2px solid var(--accent-border);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 0.88rem;
+    color: #9e9890;
+    line-height: 1.6;
+  }
+  .signal-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2rem;
+    gap: 1rem;
+    padding: 1.5rem 2.5rem;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+  }
+  .signal-connector p {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--text);
+    max-width: none;
+  }
+
+  /* COMMERCIAL */
+  .calculator {
+    margin-top: 3rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+  }
+  .calc-header {
+    padding: 1.5rem 2.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .calc-header-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .calc-body {
+    padding: 2.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+  .calc-inputs { display: flex; flex-direction: column; gap: 1.5rem; }
+  .calc-input-group label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+  .calc-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .calc-input-row input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 2px;
+    background: var(--border);
+    outline: none;
+    cursor: pointer;
+  }
+  .calc-input-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .calc-val {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--text);
+    min-width: 56px;
+    text-align: right;
+  }
+  .calc-output {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+  }
+  .calc-output-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+  }
+  .calc-output-number {
+    font-family: var(--font-mono);
+    font-size: 3rem;
+    font-weight: 500;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+  }
+  .calc-output-sub {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-top: 0.75rem;
+    max-width: none;
+    line-height: 1.5;
+  }
+  .calc-output-annual {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+    width: 100%;
+  }
+  .calc-annual-label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.4rem;
+  }
+  .calc-annual-number {
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    color: #9e9890;
+    transition: all 0.3s ease;
+  }
+
+  /* PRIORITY TENSION */
+  .tension-wrap {
+    margin-top: 3rem;
+    display: grid;
+    grid-template-columns: 1fr 80px 1fr;
+    gap: 0;
+    align-items: stretch;
+  }
+  .tension-col {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 2.5rem;
+  }
+  .tension-col.right { border-left: none; }
+  .tension-vs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .tension-vs-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+  .tension-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .tension-label.red { color: var(--red); }
+  .tension-label.green { color: var(--green); }
+  .tension-label .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .tension-label.red .dot { background: var(--red); }
+  .tension-label.green .dot { background: var(--green); }
+  .tension-col h3 { font-size: 1.05rem; margin-bottom: 0.75rem; }
+  .tension-col p { font-size: 0.88rem; color: var(--text-muted); max-width: none; }
+  .feature-list {
+    margin-top: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .feature-item {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    padding: 0.5rem 0.75rem;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--red);
+  }
+  .tension-argument {
+    margin-top: 2rem;
+    padding: 2rem 2.5rem;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-left: 3px solid var(--accent);
+  }
+  .tension-argument p {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--text);
+    max-width: none;
+    line-height: 1.7;
+  }
+
+  /* HYPOTHESIS */
+  .hypothesis-wrap {
+    margin-top: 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .hypo-cell {
+    background: var(--bg-card);
+    padding: 2.5rem;
+  }
+  .hypo-label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1.25rem;
+    display: block;
+  }
+  .hypothesis-statement {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-style: italic;
+    line-height: 1.55;
+    color: var(--text);
+    margin-bottom: 0;
+  }
+  .recommendation-box {
+    background: var(--bg-card);
+    padding: 2.5rem;
+    border: 1px solid var(--accent-border);
+  }
+  .rec-label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.25rem;
+    display: block;
+  }
+
+  /* BUY-IN TIMELINE */
+  .timeline {
+    margin-top: 3rem;
+    position: relative;
+  }
+  .timeline-line {
+    position: absolute;
+    left: 11px;
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
+    background: var(--border);
+  }
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+    position: relative;
+  }
+  .timeline-item:last-child { margin-bottom: 0; }
+  .timeline-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    margin-top: 0;
+  }
+  .timeline-dot.accent {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+  .timeline-dot-inner {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim);
+  }
+  .timeline-dot.accent .timeline-dot-inner { background: var(--accent); }
+  .timeline-content {
+    padding-top: 2px;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .timeline-item:last-child .timeline-content { border-bottom: none; padding-bottom: 0; }
+  .timeline-meta {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+  }
+  .timeline-content h3 { font-size: 0.98rem; margin-bottom: 0.5rem; }
+  .timeline-content p { font-size: 0.88rem; color: var(--text-muted); max-width: none; }
+  .friction-tag {
+    display: inline-block;
+    margin-top: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.65rem;
+    background: rgba(196, 106, 90, 0.1);
+    border: 1px solid rgba(196, 106, 90, 0.25);
+    color: var(--red);
+    border-radius: 2px;
+  }
+  .resolve-tag {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.65rem;
+    background: rgba(106, 158, 120, 0.1);
+    border: 1px solid rgba(106, 158, 120, 0.25);
+    color: var(--green);
+    border-radius: 2px;
+  }
+
+  /* OUTCOME */
+  .outcome-grid {
+    margin-top: 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .outcome-cell {
+    background: var(--bg-card);
+    padding: 2.5rem;
+  }
+  .metric-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+  }
+  .metric-item { }
+  .metric-number {
+    font-family: var(--font-mono);
+    font-size: 2rem;
+    font-weight: 500;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .metric-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .quote-block {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .quote-item {
+    padding: 1.75rem;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent-border);
+  }
+  .quote-text {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--text);
+    line-height: 1.65;
+    margin-bottom: 1rem;
+    max-width: none;
+  }
+  .quote-attribution {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .quote-item.featured {
+    border-left: 2px solid var(--accent);
+    background: var(--accent-dim);
+  }
+  .quote-item.featured .quote-text { font-size: 1.1rem; }
+
+  /* FOOTER */
+  footer {
+    padding: 4rem 0 3rem;
+    opacity: 1;
+    transform: none;
+  }
+  .footer-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-name {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: var(--text-muted);
+  }
+  .footer-meta {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: right;
+  }
+
+  /* SCROLL PROGRESS */
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--accent);
+    z-index: 200;
+    transition: width 0.1s linear;
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .container, .container-wide { padding: 0 1.5rem; }
+    section { padding: 5rem 0; }
+    .signal-grid { grid-template-columns: 1fr; }
+    .calc-body { grid-template-columns: 1fr; }
+    .tension-wrap { grid-template-columns: 1fr; }
+    .tension-vs { display: none; }
+    .tension-col.right { border-left: 1px solid var(--border); border-top: none; }
+    .hypothesis-wrap { grid-template-columns: 1fr; }
+    .outcome-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+
+<nav>
+  <div>
+    <div class="nav-label">Aidan O'Dea</div>
+    <div class="nav-title">VoC Case Study</div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#signal">Signal</a></li>
+    <li><a href="#commercial">Commercial</a></li>
+    <li><a href="#priority">Priority</a></li>
+    <li><a href="#buyin">Buy-in</a></li>
+    <li><a href="#outcome">Outcome</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="container">
+    <div class="hero-kicker">VoC · Product Influence · GenAI Adoption</div>
+    <h1>Users weren't rejecting<br>the AI. They were <em>abandoning</em> it.</h1>
+    <p>When an enterprise GenAI tool has an adoption problem, the instinct is to build more features. The data pointed elsewhere — to something smaller, and more fundamental: trust in the tool itself.</p>
+    <div class="hero-stat">
+      <div class="hero-stat-number" id="hero-number">0</div>
+      <div class="hero-stat-label">minutes of billable analyst time lost per abandoned session, on average</div>
+    </div>
+  </div>
+</section>
+
+<!-- SIGNAL -->
+<section id="signal">
+  <div class="container-wide">
+    <div class="section-index">01</div>
+    <div class="section-tag">Signal Discovery</div>
+    <h2>Three signals. One story.</h2>
+    <p>Good VoC doesn't start with a survey. It starts with paying attention. The case for autosave was assembled from three independent sources — none of which were designed to surface this problem.</p>
+
+    <div class="signal-grid">
+      <div class="signal-cell">
+        <span class="signal-number">01 — 01</span>
+        <span class="signal-type">Qualitative</span>
+        <h3>End-User Drop-in Sessions</h3>
+        <p>Across multiple facilitated drop-in sessions, 2–3 users independently expressed frustration with losing work mid-session. These weren't formal feedback — they were off-hand remarks, the kind that get missed if you're not listening for them.</p>
+        <div class="signal-quote">"I just close the tab at that point. I'd rather start again in Word."</div>
+      </div>
+      <div class="signal-cell">
+        <span class="signal-number">01 — 02</span>
+        <span class="signal-type">Behavioural</span>
+        <h3>SQL Telemetry — Abandoned Sessions</h3>
+        <p>Session telemetry showed a pattern of abandoned deliverables at specific time thresholds — consistent with users losing unsaved work and disengaging rather than recovering. The timestamps corroborated what users were describing in the drop-ins.</p>
+        <div class="signal-quote">Session drop-off clustering at 18–35 min — past the point of investment, before the point of completion.</div>
+      </div>
+      <div class="signal-cell">
+        <span class="signal-number">01 — 03</span>
+        <span class="signal-type">Corroborating</span>
+        <h3>Duplicate Deliverable Pattern</h3>
+        <p>The same deliverable names, from the same users, appearing in close succession in the telemetry. Users weren't exploring — they were rebuilding. This was the clearest behavioural evidence of rework caused by data loss.</p>
+        <div class="signal-quote">"It's happened twice now. I don't really trust it to hold my work."</div>
+      </div>
+    </div>
+
+    <div class="signal-connector">
+      <p>Three independent signals — qualitative, behavioural, and corroborating — all pointing at the same failure mode. At this point, the question wasn't whether the problem existed. It was whether it was worth solving.</p>
+    </div>
+  </div>
+</section>
+
+<!-- COMMERCIAL -->
+<section id="commercial">
+  <div class="container-wide">
+    <div class="section-index">02</div>
+    <div class="section-tag">Commercial Frame</div>
+    <h2>Making the cost of inaction visible.</h2>
+    <p>The instinct in product conversations is to frame features in terms of what they add. This case was built in reverse — quantifying what inaction was costing, in terms the business already understood: billable time.</p>
+    <p>Using rate card data and telemetry, each abandoned session could be given a rough cost. Aggregate that across the user base and the frequency of abandonment, and the number becomes hard to ignore.</p>
+
+    <div class="calculator">
+      <div class="calc-header">
+        <span class="calc-header-label">Commercial Calculator — Cost of Inaction</span>
+        <span class="calc-header-label" style="color: var(--text-dim);">Adjust inputs to model your scenario</span>
+      </div>
+      <div class="calc-body">
+        <div class="calc-inputs">
+          <div class="calc-input-group">
+            <label>Active analysts on platform</label>
+            <div class="calc-input-row">
+              <input type="range" id="analysts" min="10" max="200" value="60" oninput="calcUpdate()">
+              <span class="calc-val" id="analysts-val">60</span>
+            </div>
+          </div>
+          <div class="calc-input-group">
+            <label>Abandoned sessions per analyst / week</label>
+            <div class="calc-input-row">
+              <input type="range" id="sessions" min="0.5" max="5" value="1.5" step="0.5" oninput="calcUpdate()">
+              <span class="calc-val" id="sessions-val">1.5</span>
+            </div>
+          </div>
+          <div class="calc-input-group">
+            <label>Avg. time lost per session (minutes)</label>
+            <div class="calc-input-row">
+              <input type="range" id="minutes" min="10" max="60" value="25" oninput="calcUpdate()">
+              <span class="calc-val" id="minutes-val">25 min</span>
+            </div>
+          </div>
+          <div class="calc-input-group">
+            <label>Blended analyst rate (£/hr)</label>
+            <div class="calc-input-row">
+              <input type="range" id="rate" min="80" max="300" value="150" step="10" oninput="calcUpdate()">
+              <span class="calc-val" id="rate-val">£150</span>
+            </div>
+          </div>
+        </div>
+        <div class="calc-output">
+          <div class="calc-output-label">Weekly cost of inaction</div>
+          <div class="calc-output-number" id="weekly-cost">£0</div>
+          <div class="calc-output-sub">Across the active analyst base, each week that autosave was absent.</div>
+          <div class="calc-output-annual">
+            <div class="calc-annual-label">Annualised (48 working weeks)</div>
+            <div class="calc-annual-number" id="annual-cost">£0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRIORITY TENSION -->
+<section id="priority">
+  <div class="container-wide">
+    <div class="section-index">03</div>
+    <div class="section-tag">The Competing Priority Problem</div>
+    <h2>The backlog wasn't empty.<br>It was pointed the wrong way.</h2>
+    <p>The product team had a clear direction: build towards the AI-powered capabilities that were part of the broader platform promise. Autosave wasn't glamorous. It wasn't part of any demo. The challenge was reframing the conversation — not from features to features, but from adoption to value.</p>
+
+    <div class="tension-wrap">
+      <div class="tension-col">
+        <div class="tension-label red"><span class="dot"></span>What the backlog prioritised</div>
+        <h3>Higher-visibility AI features</h3>
+        <p>The development focus was on capabilities that showcased the platform's AI potential — the kind of features that land well in steering committee updates.</p>
+        <div class="feature-list">
+          <div class="feature-item">AI-generated executive summaries</div>
+          <div class="feature-item">Natural language data querying</div>
+          <div class="feature-item">Automated anomaly / insight flagging</div>
+          <div class="feature-item">Generative proposal drafting</div>
+          <div class="feature-item">Embedded conversational assistant</div>
+        </div>
+      </div>
+      <div class="tension-vs">
+        <div class="tension-vs-label">vs</div>
+      </div>
+      <div class="tension-col right">
+        <div class="tension-label green"><span class="dot"></span>What the data was saying</div>
+        <h3>Users weren't staying long enough to use any of it</h3>
+        <p>Adoption was the primary commercial commitment to the client. Without users in the tool, the platform's AI capabilities were irrelevant. The most advanced feature in a tool no one trusts is worthless.</p>
+        <p style="margin-top: 0.75rem;">The argument wasn't that autosave was more important than AI. It was that <strong style="color: var(--text); font-weight: 500;">autosave was a precondition for AI</strong> — you can't unlock value from a tool users won't stay in.</p>
+      </div>
+    </div>
+
+    <div class="tension-argument">
+      <p>"You can't realise value from a feature users never reach. Adoption isn't a soft metric — it's the delivery vehicle for everything else we're building. We need to fix the floor before we can raise the ceiling."</p>
+    </div>
+  </div>
+</section>
+
+<!-- HYPOTHESIS / RECOMMENDATION -->
+<section id="hypothesis">
+  <div class="container">
+    <div class="section-index">04</div>
+    <div class="section-tag">The Recommendation</div>
+    <h2>A hypothesis, not a feature request.</h2>
+    <p>The recommendation to the product owner was framed as a testable proposition — not a gut feeling, but a structured argument built on triangulated evidence and a quantified business case.</p>
+
+    <div class="hypothesis-wrap" style="margin-top: 3rem;">
+      <div class="hypo-cell">
+        <span class="hypo-label">The hypothesis</span>
+        <div class="hypothesis-statement">"If users trust the tool not to lose their work, they will stay in it longer — and adoption, our primary commercial metric, will follow."</div>
+      </div>
+      <div class="hypo-cell" style="border-left: 1px solid var(--border);">
+        <span class="hypo-label">The recommendation</span>
+        <p style="font-size: 0.92rem; max-width: none;">Prioritise autosave above the next scheduled AI feature release. The cost of the fix is a one-time development investment. The cost of not fixing it is accumulating weekly, measurably, and directly undermining our adoption commitments to the client.</p>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.75rem; max-width: none;">Evidence base: user drop-in observations, session abandonment telemetry, duplicate deliverable analysis, rate card commercial model.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BUY-IN -->
+<section id="buyin">
+  <div class="container">
+    <div class="section-index">05</div>
+    <div class="section-tag">Getting Buy-in</div>
+    <h2>The path from evidence to decision.</h2>
+    <p>The business case moved through three conversations — product owner, senior leadership, and the cross-discipline delivery team. Each required a different framing of the same core argument.</p>
+
+    <div class="timeline" style="margin-top: 3.5rem;">
+      <div class="timeline-line"></div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot">
+          <div class="timeline-dot-inner"></div>
+        </div>
+        <div class="timeline-content">
+          <div class="timeline-meta">Stage 01 — Product Owner</div>
+          <h3>Initial pushback on priority</h3>
+          <p>The product owner's initial response was predictable: autosave wasn't in the roadmap, the sprint was already committed, and the AI feature pipeline had client visibility. The commercial model changed the conversation — not because the number was enormous, but because it was real. Quantified waste in a cost-conscious delivery context is harder to defer than a user complaint.</p>
+          <span class="friction-tag">Friction: roadmap commitment, sprint velocity</span>
+          <br>
+          <span class="resolve-tag">Resolved via: commercial model + adoption risk framing</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot accent">
+          <div class="timeline-dot-inner"></div>
+        </div>
+        <div class="timeline-content">
+          <div class="timeline-meta">Stage 02 — Senior Leadership</div>
+          <h3>Reframing for the room</h3>
+          <p>Leadership weren't interested in a feature comparison. The message was stripped back: our AI-enabled delivery promise to the client is contingent on user adoption. Adoption is at risk. Here is the evidence. Here is the cost. Here is the fix. The autosave framing was replaced entirely — this was presented as an adoption intervention, not a technical patch.</p>
+          <span class="resolve-tag">Resolved via: adoption risk → client commitment narrative</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot">
+          <div class="timeline-dot-inner"></div>
+        </div>
+        <div class="timeline-content">
+          <div class="timeline-meta">Stage 03 — Cross-Discipline Delivery Team</div>
+          <h3>Translating the case into requirements</h3>
+          <p>With prioritisation secured, the role shifted to requirements translation — working across engineering, UX, and QA to ensure the implementation addressed the actual failure mode identified in the telemetry. The risk was building a technical autosave that didn't match the user's mental model of when and how saves occurred. Drop-in session insights were used directly to shape acceptance criteria.</p>
+          <span class="resolve-tag">Role: requirements translator, acceptance tester, user proxy</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OUTCOME -->
+<section id="outcome">
+  <div class="container-wide">
+    <div class="section-index">06</div>
+    <div class="section-tag">The Outcome</div>
+    <h2>The hypothesis held.</h2>
+    <p>Post-release telemetry and a follow-up drop-in session confirmed the expected pattern: session duration increased, abandonment rates fell, and the duplicate deliverable signature — the clearest signal of rework — dropped measurably.</p>
+    <p>The most significant feedback wasn't a metric. It was a behavioural shift.</p>
+
+    <div class="outcome-grid">
+      <div class="outcome-cell">
+        <span style="font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 1.5rem;">Signal evidence</span>
+        <div class="metric-row">
+          <div class="metric-item">
+            <div class="metric-number">↓ ~40%</div>
+            <div class="metric-label">Reduction in session abandonment at the 18–35 min threshold (post-release telemetry)</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-number">↓ Sig.</div>
+            <div class="metric-label">Drop in duplicate deliverable signatures from same-user, same-name within 24hr window</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-number">↑ Session</div>
+            <div class="metric-label">Average session length increased — users staying past the previous drop-off point</div>
+          </div>
+        </div>
+      </div>
+      <div class="outcome-cell">
+        <span style="font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 1.5rem;">User feedback — drop-in sessions</span>
+        <div class="quote-block">
+          <div class="quote-item">
+            <p class="quote-text">"It's happened twice now. I don't really trust it to hold my work."</p>
+            <div class="quote-attribution">Pre-release — drop-in session</div>
+          </div>
+          <div class="quote-item featured">
+            <p class="quote-text">"It sounds small but it actually changed how I use it. I just leave it open now."</p>
+            <div class="quote-attribution">Post-release — drop-in session</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REFLECTION -->
+<section id="reflection">
+  <div class="container">
+    <div class="section-index">07</div>
+    <div class="section-tag">Methodology Reflection</div>
+    <h2>What this case was really about.</h2>
+    <p>Autosave was never the point. The point was demonstrating that user insight, when properly triangulated and commercially translated, can move a product decision that pure intuition or stakeholder preference cannot.</p>
+    <p>The VoC methodology here wasn't a formal research programme — it was disciplined observation, systematic corroboration, and the willingness to build a quantified argument from signals others had dismissed as anecdotal.</p>
+    <p>In a context where AI adoption is both the promise and the pressure, the ability to identify and elevate the right problem — not the flashiest one — is where real value realisation work happens.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-name">Aidan O'Dea</div>
+      <div class="footer-meta">
+        Value Realisation · GenAI Adoption<br>
+        VoC Case Study — Autosave Feature
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Scroll progress
+const progress = document.getElementById('progress');
+window.addEventListener('scroll', () => {
+  const scrolled = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+  progress.style.width = scrolled + '%';
+});
+
+// Intersection observer for section reveals
+const sections = document.querySelectorAll('section:not(#hero)');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.08 });
+sections.forEach(s => observer.observe(s));
+
+// Hero number count-up
+function countUp(el, target, duration) {
+  const start = performance.now();
+  const update = (time) => {
+    const elapsed = time - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(eased * target);
+    if (progress < 1) requestAnimationFrame(update);
+    else el.textContent = target;
+  };
+  requestAnimationFrame(update);
+}
+setTimeout(() => {
+  countUp(document.getElementById('hero-number'), 25, 1400);
+}, 600);
+
+// Calculator
+function calcUpdate() {
+  const analysts = +document.getElementById('analysts').value;
+  const sessions = +document.getElementById('sessions').value;
+  const minutes = +document.getElementById('minutes').value;
+  const rate = +document.getElementById('rate').value;
+
+  document.getElementById('analysts-val').textContent = analysts;
+  document.getElementById('sessions-val').textContent = sessions;
+  document.getElementById('minutes-val').textContent = minutes + ' min';
+  document.getElementById('rate-val').textContent = '£' + rate;
+
+  const weeklyHours = (analysts * sessions * minutes) / 60;
+  const weeklyCost = weeklyHours * rate;
+  const annualCost = weeklyCost * 48;
+
+  const fmt = (n) => '£' + Math.round(n).toLocaleString('en-GB');
+
+  document.getElementById('weekly-cost').textContent = fmt(weeklyCost);
+  document.getElementById('annual-cost').textContent = fmt(annualCost);
+}
+calcUpdate();
+</script>
+
+</body>
+</html>
