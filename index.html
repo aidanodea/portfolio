@@ -911,9 +911,9 @@
     <div class="section-index">02 / 07</div>
     <div class="section-tag">Commercial Frame</div>
     <h2>Making the cost of inaction visible.</h2>
-    <p>The instinct in product conversations is to frame features in terms of what they add. This case was built in reverse — quantifying what inaction was costing, in terms the business already understood: billable time.</p>
+    <p>The instinct in product conversations was to frame features in terms of what they add. This case was built in reverse — quantifying what inaction was costing, in terms the business already understood: billable time.</p>
     <p>Using rate card data and telemetry, each abandoned session could be given a rough cost. Aggregate that across the user base and the frequency of abandonment, and the number becomes hard to ignore.</p>
-
+    <p>I wanted to put the data in the hands of customers. They were not the end user feeling the frustration of lost work, but they could see a frustration of their own.</p>
     <div class="calculator">
       <div class="calc-header">
         <span class="calc-header-label">Commercial Calculator — Cost of Inaction</span>
@@ -922,14 +922,14 @@
       <div class="calc-body">
         <div class="calc-inputs">
           <div class="calc-input-group">
-            <label>Active analysts on platform</label>
+            <label>Number of consultants on platform</label>
             <div class="calc-input-row">
               <input type="range" id="analysts" min="10" max="200" value="60" oninput="calcUpdate()">
               <span class="calc-val" id="analysts-val">60</span>
             </div>
           </div>
           <div class="calc-input-group">
-            <label>Abandoned sessions per analyst / week</label>
+            <label>Abandoned sessions per consultant / week</label>
             <div class="calc-input-row">
               <input type="range" id="sessions" min="0.5" max="5" value="1.5" step="0.5" oninput="calcUpdate()">
               <span class="calc-val" id="sessions-val">1.5</span>
@@ -943,20 +943,20 @@
             </div>
           </div>
           <div class="calc-input-group">
-            <label>Blended analyst rate (£/hr)</label>
+            <label>Blended consultant rate (€/hr)</label>
             <div class="calc-input-row">
               <input type="range" id="rate" min="80" max="300" value="150" step="10" oninput="calcUpdate()">
-              <span class="calc-val" id="rate-val">£150</span>
+              <span class="calc-val" id="rate-val">€150</span>
             </div>
           </div>
         </div>
         <div class="calc-output">
           <div class="calc-output-label">Weekly cost of inaction</div>
-          <div class="calc-output-number" id="weekly-cost">£0</div>
+          <div class="calc-output-number" id="weekly-cost">€0</div>
           <div class="calc-output-sub">Across the active analyst base, each week that autosave was absent.</div>
           <div class="calc-output-annual">
             <div class="calc-annual-label">Annualised (48 working weeks)</div>
-            <div class="calc-annual-number" id="annual-cost">£0</div>
+            <div class="calc-annual-number" id="annual-cost">€0</div>
           </div>
         </div>
       </div>
@@ -970,7 +970,7 @@
     <div class="section-index">03 / 07</div>
     <div class="section-tag">The Competing Priority Problem</div>
     <h2>The backlog wasn't empty.<br>It was pointed the wrong way.</h2>
-    <p>The product team had a clear direction: build towards the AI-powered capabilities that were part of the broader platform promise. Autosave wasn't glamorous. It wasn't part of any demo. The challenge was reframing the conversation — not from features to features, but from adoption to value.</p>
+    <p>The product team had a clear direction: build towards the AI-powered capabilities that were part of the broader platform vision. The challenge of getting autosave into the minds of the product team was about reframing the conversation — from building new features to supporting user adoption.</p>
 
     <div class="tension-wrap">
       <div class="tension-col">
@@ -1194,13 +1194,13 @@ function calcUpdate() {
   document.getElementById('analysts-val').textContent = analysts;
   document.getElementById('sessions-val').textContent = sessions;
   document.getElementById('minutes-val').textContent = minutes + ' min';
-  document.getElementById('rate-val').textContent = '£' + rate;
+  document.getElementById('rate-val').textContent = '€' + rate;
 
   const weeklyHours = (analysts * sessions * minutes) / 60;
   const weeklyCost = weeklyHours * rate;
   const annualCost = weeklyCost * 48;
 
-  const fmt = (n) => '£' + Math.round(n).toLocaleString('en-GB');
+  const fmt = (n) => '€' + Math.round(n).toLocaleString('en-GB');
 
   document.getElementById('weekly-cost').textContent = fmt(weeklyCost);
   document.getElementById('annual-cost').textContent = fmt(annualCost);
