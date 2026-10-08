@@ -4,398 +4,575 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VoC Case Study — Autosave</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Inter+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #ffffff;
-    --bg-subtle: #f7f7f7;
-    --bg-card: #ffffff;
-    --border: #e8e8e8;
-    --border-strong: #d0d0d0;
-    --text: #1a1a1a;
-    --text-muted: #6b7280;
-    --text-dim: #9ca3af;
-    --accent: #0061FE;
-    --accent-light: #e8f0ff;
-    --accent-mid: #3b82f6;
-    --red: #ef4444;
-    --red-light: #fef2f2;
-    --green: #10b981;
-    --green-light: #ecfdf5;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
-    --shadow-lg: 0 8px 24px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.04);
-    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-mono: 'Inter Mono', 'Fira Code', monospace;
-    --radius: 8px;
-    --radius-lg: 12px;
+    --bg-deep:    #0a0a0a;
+    --bg-surface: #111111;
+    --bg-card:    #1a1a1a;
+    --border:     #222222;
+    --border-dim: #191919;
+    --text-primary:   #e8e6e1;
+    --text-secondary: #8a8780;
+    --text-dim:       #555550;
+    --accent:         #a8c256;
+    --accent-bright:  #c4e04e;
+    --accent-dim:     #6b7d3a;
+    --accent-bg:      rgba(168,194,86,0.08);
+    --red:            #ef4444;
+    --red-bg:         rgba(239,68,68,0.1);
+    --green:          #10b981;
+    --green-bg:       rgba(16,185,129,0.1);
+    --font-display: 'Oswald', 'Barlow Condensed', Impact, sans-serif;
+    --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+    --font-body:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --sidebar-width: 220px;
+    --topbar-height: 44px;
+    --footer-height: 36px;
+    --edge-width:    32px;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  html { scroll-behavior: smooth; }
+  html { -webkit-font-smoothing: antialiased; }
 
   body {
-    background: var(--bg);
-    color: var(--text);
+    background: var(--bg-deep);
+    color: var(--text-primary);
     font-family: var(--font-body);
-    font-size: 16px;
+    font-size: 15px;
     line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
+    height: 100vh;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: var(--topbar-height) 1fr var(--footer-height);
+    grid-template-columns: var(--sidebar-width) var(--edge-width) 1fr var(--edge-width);
+    grid-template-areas:
+      "topbar  topbar  topbar  topbar"
+      "sidebar edgeL   content edgeR"
+      "footer  footer  footer  footer";
   }
 
-  /* NAV */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 3rem;
-    height: 64px;
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(12px);
+  /* ── TOPBAR ── */
+  .topbar {
+    grid-area: topbar;
+    background: var(--bg-deep);
     border-bottom: 1px solid var(--border);
-  }
-  .nav-brand {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 10px;
-  }
-  .nav-logo {
-    width: 28px;
-    height: 28px;
-    background: var(--accent);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .nav-logo svg {
-    width: 16px;
-    height: 16px;
-    fill: white;
-  }
-  .nav-label {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--text);
-    letter-spacing: -0.01em;
-  }
-  .nav-subtitle {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    font-weight: 400;
-  }
-  .nav-links {
-    display: flex;
-    gap: 0.25rem;
-    list-style: none;
-    align-items: center;
-  }
-  .nav-links a {
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--text-muted);
-    text-decoration: none;
-    padding: 0.4rem 0.85rem;
-    border-radius: 6px;
-    transition: background 0.15s, color 0.15s;
-  }
-  .nav-links a:hover {
-    background: var(--bg-subtle);
-    color: var(--text);
-  }
-
-  /* SECTIONS */
-  section {
-    padding: 7rem 0;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-  }
-  section.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 3rem;
-  }
-  .container-wide {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 3rem;
-  }
-
-  /* SECTION LABELS */
-  .section-index {
+    padding: 0 1.5rem;
     font-family: var(--font-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.06em;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
     color: var(--text-dim);
-    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    z-index: 10;
   }
-  .section-tag {
-    display: inline-flex;
+  .topbar-left, .topbar-center, .topbar-right {
+    display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    color: var(--accent);
-    background: var(--accent-light);
-    padding: 0.35rem 0.85rem;
-    border-radius: 100px;
-    margin-bottom: 1.5rem;
   }
-  .section-tag::before {
-    content: '';
+  .topbar-brand {
+    color: var(--text-primary);
+    font-weight: 500;
+    letter-spacing: 0.15em;
+  }
+  .topbar-sep { opacity: 0.3; }
+  .topbar-compass {
+    font-size: 0.9rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    grid-area: sidebar;
+    background: var(--bg-deep);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem 0;
+    overflow-y: auto;
+    z-index: 10;
+  }
+  .sidebar-title {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    padding: 0 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.6rem 1rem;
+    text-decoration: none;
+    color: var(--text-secondary);
+    border-left: 2px solid transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .sidebar-nav-item:hover {
+    color: var(--text-primary);
+    background: rgba(168,194,86,0.04);
+  }
+  .sidebar-nav-item.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: var(--accent-bg);
+  }
+  .nav-icon {
+    font-size: 0.85rem;
+    width: 1.2rem;
+    text-align: center;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .nav-label {
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .nav-index {
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    margin-left: auto;
+  }
+  .sidebar-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1rem 1rem;
+  }
+  .sidebar-legend {
+    padding: 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .legend-line {
+    width: 16px;
+    height: 2px;
+    flex-shrink: 0;
+  }
+  .legend-dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--accent);
+    flex-shrink: 0;
+    margin: 0 5px;
+  }
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 1rem 1rem 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .sidebar-credit {
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .sidebar-social {
+    display: flex;
+    gap: 0.8rem;
+  }
+  .sidebar-social a {
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .sidebar-social a:hover { color: var(--accent); }
+
+  /* ── EDGE TEXT ── */
+  .edge-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 0.45rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    writing-mode: vertical-lr;
+    user-select: none;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  .edge-text--left {
+    grid-area: edgeL;
+    transform: rotate(180deg);
+  }
+  .edge-text--right {
+    grid-area: edgeR;
   }
 
-  /* TYPOGRAPHY */
-  h1 {
-    font-size: clamp(2.4rem, 5vw, 3.4rem);
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -0.03em;
-    margin-bottom: 1.5rem;
-    color: var(--text);
+  /* ── CONTENT AREA ── */
+  .content-area {
+    grid-area: content;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.3) 100%),
+      var(--bg-surface);
   }
-  h1 em {
+  .content-area::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background-image:
+      linear-gradient(to right, var(--border) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--border) 1px, transparent 1px),
+      linear-gradient(to right, var(--border-dim) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--border-dim) 1px, transparent 1px);
+    background-size:
+      200px 200px,
+      200px 200px,
+      40px 40px,
+      40px 40px;
+    opacity: 0.35;
+  }
+  .content-area::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      radial-gradient(ellipse at 25% 35%, rgba(168,194,86,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 75% 65%, rgba(168,194,86,0.03) 0%, transparent 40%);
+  }
+
+  /* ── CONTENT PANELS ── */
+  .content-panel {
+    position: absolute;
+    inset: 0;
+    padding: 2.5rem;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.98);
+    transition: opacity 0.45s ease, transform 0.45s ease, visibility 0s 0.45s;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 2;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-dim) transparent;
+  }
+  .content-panel::-webkit-scrollbar { width: 6px; }
+  .content-panel::-webkit-scrollbar-track { background: transparent; }
+  .content-panel::-webkit-scrollbar-thumb { background: var(--accent-dim); border-radius: 3px; }
+  .content-panel.active {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+    transition: opacity 0.45s ease, transform 0.45s ease, visibility 0s 0s;
+  }
+
+  /* ── SHARED PANEL STYLES ── */
+  .panel-index {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+  .panel-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid rgba(168,194,86,0.15);
+    padding: 0.3rem 0.7rem;
+    border-radius: 2px;
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+  }
+  .panel-tag::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .panel-heading {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+    color: var(--text-primary);
+  }
+  .panel-heading em {
     font-style: normal;
     color: var(--accent);
   }
-  h2 {
-    font-size: clamp(1.6rem, 3vw, 2rem);
-    font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-    margin-bottom: 1.25rem;
-    color: var(--text);
-  }
-  h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    margin-bottom: 0.6rem;
-    color: var(--text);
-  }
-  p {
-    color: var(--text-muted);
-    font-size: 1rem;
+  .panel-text {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
     line-height: 1.75;
-    max-width: 62ch;
+    max-width: 60ch;
   }
-  p + p { margin-top: 0.875rem; }
+  .panel-text + .panel-text { margin-top: 0.75rem; }
 
-  /* HERO */
-  #hero {
-    padding: 10rem 0 7rem;
-    opacity: 1;
-    transform: none;
-    background: linear-gradient(180deg, #f0f5ff 0%, #ffffff 100%);
+  /* ── HOME PANEL ── */
+  .home-layout {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    gap: 2rem;
   }
-  .hero-kicker {
+  .home-top {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .home-kicker {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-bottom: 2rem;
   }
   .kicker-pill {
-    font-size: 0.78rem;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
     font-weight: 500;
+    letter-spacing: 0.06em;
     color: var(--accent);
-    background: var(--accent-light);
-    border: 1px solid rgba(0,97,254,0.15);
-    padding: 0.3rem 0.75rem;
-    border-radius: 100px;
-    cursor: default;
-    position: relative;
+    background: var(--accent-bg);
+    border: 1px solid rgba(168,194,86,0.15);
+    padding: 0.25rem 0.6rem;
+    border-radius: 2px;
+    text-transform: uppercase;
   }
-  .kicker-pill::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--text);
-    color: white;
-    font-size: 0.75rem;
-    font-weight: 400;
-    white-space: nowrap;
-    padding: 0.45rem 0.8rem;
-    border-radius: 6px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s ease;
-    z-index: 10;
+  .kicker-sep { color: var(--text-dim); font-size: 0.8rem; }
+  .home-headline {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 4.5vw, 3.8rem);
+    font-weight: 700;
+    line-height: 1.05;
+    text-transform: uppercase;
+    color: var(--text-primary);
   }
-  .kicker-pill:hover::after { opacity: 1; }
-  .kicker-sep { color: var(--border-strong); font-size: 1rem; }
-
-  .hero-stat {
-    margin-top: 3rem;
-    display: inline-flex;
+  .home-headline em {
+    font-style: normal;
+    color: var(--accent);
+  }
+  .home-desc {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.75;
+    max-width: 56ch;
+  }
+  .home-bottom {
+    display: flex;
+    align-items: flex-end;
+    gap: 3rem;
+  }
+  .home-stat {
+    display: flex;
     flex-direction: column;
-    padding: 2rem 2.5rem;
+    padding: 1.75rem 2rem;
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
-    min-width: 360px;
   }
-  .hero-stat-number {
-    font-family: var(--font-mono);
+  .home-stat-number {
+    font-family: var(--font-display);
     font-size: 3.5rem;
     font-weight: 700;
     color: var(--accent);
     line-height: 1;
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.02em;
+    margin-bottom: 0.4rem;
   }
-  .hero-stat-label {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    max-width: 28ch;
+  .home-stat-label {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    max-width: 24ch;
   }
+  .home-tagline {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3vw, 2.8rem);
+    font-weight: 700;
+    text-transform: uppercase;
+    line-height: 1.05;
+    color: var(--text-primary);
+    max-width: 14ch;
+  }
+  .home-tagline span { color: var(--accent); }
 
-  /* SIGNAL GRID */
+  /* ── SIGNAL PANEL ── */
   .signal-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
-    margin-top: 3rem;
+    gap: 1px;
+    background: var(--border);
+    margin-top: 2rem;
   }
   .signal-cell {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 2rem;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.2s, transform 0.2s;
+    background: var(--bg-surface);
+    padding: 1.75rem;
+    transition: background 0.2s;
   }
-  .signal-cell:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
-  }
+  .signal-cell:hover { background: var(--bg-card); }
   .signal-number {
     font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.06em;
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
     color: var(--text-dim);
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     display: block;
   }
   .signal-type {
     display: inline-block;
-    font-size: 0.72rem;
-    font-weight: 600;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     color: var(--accent);
-    background: var(--accent-light);
-    padding: 0.2rem 0.6rem;
-    border-radius: 4px;
-    margin-bottom: 0.875rem;
+    background: var(--accent-bg);
+    border: 1px solid rgba(168,194,86,0.15);
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    margin-bottom: 0.75rem;
   }
-  .signal-cell h3 { font-size: 0.95rem; }
+  .signal-cell h3 {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--text-primary);
+    margin-bottom: 0.6rem;
+  }
   .signal-cell p {
-    font-size: 0.875rem;
+    font-size: 0.82rem;
     line-height: 1.65;
-    max-width: none;
+    color: var(--text-secondary);
   }
   .signal-quote {
-    margin-top: 1.25rem;
-    padding: 0.875rem 1.125rem;
-    background: var(--bg-subtle);
-    border-left: 3px solid var(--accent);
-    border-radius: 0 6px 6px 0;
-    font-size: 0.875rem;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: rgba(168,194,86,0.05);
+    border-left: 2px solid var(--accent);
+    font-size: 0.82rem;
     font-style: italic;
-    color: var(--text-muted);
-    line-height: 1.6;
+    color: var(--text-secondary);
+    line-height: 1.55;
   }
   .signal-connector {
-    margin-top: 1.5rem;
+    margin-top: 1.25rem;
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 1.5rem 2rem;
-    background: var(--accent-light);
-    border: 1px solid rgba(0,97,254,0.15);
-    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    background: var(--accent-bg);
+    border: 1px solid rgba(168,194,86,0.15);
   }
   .signal-connector::before {
     content: '→';
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: var(--accent);
     flex-shrink: 0;
   }
   .signal-connector p {
-    font-size: 0.95rem;
-    color: var(--text);
+    font-size: 0.85rem;
+    color: var(--text-primary);
     font-weight: 500;
-    max-width: none;
     line-height: 1.55;
   }
 
-  /* CALCULATOR */
+  /* ── CALCULATOR ── */
   .calculator {
-    margin-top: 3rem;
+    margin-top: 2rem;
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
     overflow: hidden;
   }
   .calc-header {
-    padding: 1.25rem 2rem;
+    padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: var(--bg-subtle);
+    background: var(--bg-surface);
   }
   .calc-header-label {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
   .calc-header-sub {
-    font-size: 0.78rem;
-    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
   }
   .calc-body {
-    padding: 2rem;
+    padding: 1.75rem;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2rem;
+    gap: 1.75rem;
   }
-  .calc-inputs { display: flex; flex-direction: column; gap: 1.5rem; }
+  .calc-inputs { display: flex; flex-direction: column; gap: 1.25rem; }
   .calc-input-group label {
     display: block;
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     font-weight: 500;
-    color: var(--text);
-    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.4rem;
   }
   .calc-input-row {
     display: flex;
     align-items: center;
-    gap: 0.875rem;
+    gap: 0.75rem;
   }
   .calc-input-row input[type="range"] {
     flex: 1;
     -webkit-appearance: none;
-    height: 4px;
+    height: 3px;
     background: var(--border);
     border-radius: 2px;
     outline: none;
@@ -403,83 +580,90 @@
   }
   .calc-input-row input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     background: var(--accent);
     border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 0 0 3px rgba(0,97,254,0.15);
+    box-shadow: 0 0 0 3px rgba(168,194,86,0.2);
     transition: box-shadow 0.15s;
   }
   .calc-input-row input[type="range"]::-webkit-slider-thumb:hover {
-    box-shadow: 0 0 0 5px rgba(0,97,254,0.2);
+    box-shadow: 0 0 0 5px rgba(168,194,86,0.25);
+  }
+  .calc-input-row input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--accent);
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
   }
   .calc-val {
     font-family: var(--font-mono);
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     font-weight: 500;
-    color: var(--text);
-    min-width: 56px;
+    color: var(--text-primary);
+    min-width: 52px;
     text-align: right;
   }
   .calc-output {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 2rem;
-    background: linear-gradient(135deg, var(--accent) 0%, #3b82f6 100%);
-    border-radius: var(--radius);
+    padding: 1.75rem;
+    background: linear-gradient(135deg, var(--accent-dim) 0%, #4a6628 100%);
   }
   .calc-output-label {
-    font-size: 0.78rem;
-    font-weight: 600;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: rgba(255,255,255,0.75);
-    margin-bottom: 0.75rem;
+    letter-spacing: 0.06em;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 0.6rem;
   }
   .calc-output-number {
-    font-family: var(--font-mono);
-    font-size: 3rem;
+    font-family: var(--font-display);
+    font-size: 2.5rem;
     font-weight: 700;
     color: white;
     line-height: 1;
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.02em;
-    transition: all 0.3s ease;
-  }
-  .calc-output-sub {
-    font-size: 0.82rem;
-    color: rgba(255,255,255,0.75);
-    margin-top: 0.5rem;
-    max-width: none;
-    line-height: 1.5;
-  }
-  .calc-output-annual {
-    margin-top: 1.25rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid rgba(255,255,255,0.2);
-  }
-  .calc-annual-label {
-    font-size: 0.72rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: rgba(255,255,255,0.6);
-    margin-bottom: 0.35rem;
-  }
-  .calc-annual-number {
-    font-family: var(--font-mono);
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: rgba(255,255,255,0.9);
+    margin-bottom: 0.4rem;
     letter-spacing: -0.01em;
     transition: all 0.3s ease;
   }
+  .calc-output-sub {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.6);
+    margin-top: 0.4rem;
+    line-height: 1.5;
+  }
+  .calc-output-annual {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255,255,255,0.15);
+  }
+  .calc-annual-label {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 0.3rem;
+  }
+  .calc-annual-number {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+    transition: all 0.3s ease;
+  }
 
-  /* PRIORITY TENSION */
+  /* ── TENSION / PRIORITY ── */
   .tension-wrap {
-    margin-top: 3rem;
+    margin-top: 2rem;
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     gap: 0;
@@ -488,145 +672,149 @@
   .tension-col {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 2.5rem;
-    box-shadow: var(--shadow-sm);
+    padding: 2rem;
   }
-  .tension-col.right { border-radius: var(--radius-lg); }
   .tension-vs {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 1.5rem;
+    padding: 0 1.25rem;
   }
   .tension-vs-label {
-    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--text-dim);
-    background: var(--bg-subtle);
+    background: var(--bg-surface);
     border: 1px solid var(--border);
-    padding: 0.5rem 0.75rem;
-    border-radius: 100px;
+    padding: 0.4rem 0.6rem;
+    border-radius: 2px;
   }
   .tension-label {
-    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 1.25rem;
+    letter-spacing: 0.06em;
+    margin-bottom: 1rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
   .tension-label.red { color: var(--red); }
   .tension-label.green { color: var(--green); }
-  .tension-label .dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
+  .tension-label .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
   .tension-label.red .dot { background: var(--red); }
   .tension-label.green .dot { background: var(--green); }
-  .tension-col h3 { font-size: 1rem; margin-bottom: 0.75rem; }
-  .tension-col p { font-size: 0.875rem; color: var(--text-muted); max-width: none; }
+  .tension-col h3 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin-bottom: 0.6rem;
+  }
+  .tension-col p {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
   .feature-list {
-    margin-top: 1.25rem;
+    margin-top: 1rem;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
   .feature-item {
-    font-size: 0.82rem;
-    color: var(--text-muted);
-    padding: 0.5rem 0.875rem;
-    background: var(--red-light);
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    padding: 0.4rem 0.7rem;
+    background: var(--red-bg);
     border: 1px solid rgba(239,68,68,0.15);
-    border-radius: 6px;
+    border-radius: 2px;
   }
   .tension-argument {
-    margin-top: 1.5rem;
-    padding: 1.75rem 2rem;
-    background: var(--accent-light);
-    border: 1px solid rgba(0,97,254,0.15);
-    border-radius: var(--radius);
-    border-left: 4px solid var(--accent);
+    margin-top: 1.25rem;
+    padding: 1.5rem;
+    background: var(--accent-bg);
+    border: 1px solid rgba(168,194,86,0.15);
+    border-left: 3px solid var(--accent);
   }
   .tension-argument p {
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-style: italic;
-    color: var(--text);
-    max-width: none;
+    color: var(--text-primary);
     line-height: 1.7;
-    font-weight: 500;
+    font-weight: 400;
   }
 
-  /* HYPOTHESIS */
+  /* ── HYPOTHESIS ── */
   .hypothesis-wrap {
-    margin-top: 3rem;
+    margin-top: 2rem;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.25rem;
+    gap: 1px;
+    background: var(--border);
   }
   .hypo-cell {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 2.5rem;
-    box-shadow: var(--shadow-sm);
+    background: var(--bg-surface);
+    padding: 2rem;
   }
   .hypo-label {
-    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.08em;
     color: var(--text-dim);
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
     display: block;
   }
   .hypothesis-statement {
-    font-size: 1.2rem;
+    font-size: 1.05rem;
     font-style: italic;
-    font-weight: 500;
+    font-weight: 400;
     line-height: 1.55;
-    color: var(--text);
+    color: var(--text-primary);
   }
-  .recommendation-box {
-    background: var(--accent-light);
-    border: 1px solid rgba(0,97,254,0.2);
-    border-radius: var(--radius-lg);
-    padding: 2.5rem;
+  .rec-cell {
+    background: var(--accent-bg);
+    padding: 2rem;
   }
   .rec-label {
-    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.08em;
     color: var(--accent);
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
     display: block;
   }
-
-  /* TIMELINE */
-  .timeline {
-    margin-top: 3rem;
-    position: relative;
+  .rec-cell p {
+    font-size: 0.85rem;
+    line-height: 1.65;
+    color: var(--text-primary);
   }
+  .rec-cell p + p { margin-top: 0.6rem; color: var(--text-secondary); }
+
+  /* ── TIMELINE / BUY-IN ── */
+  .timeline { margin-top: 2rem; position: relative; }
   .timeline-line {
     position: absolute;
     left: 15px;
     top: 20px;
     bottom: 20px;
-    width: 2px;
+    width: 1px;
     background: var(--border);
-    border-radius: 2px;
   }
   .timeline-item {
     display: grid;
     grid-template-columns: 32px 1fr;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
     position: relative;
   }
   .timeline-item:last-child { margin-bottom: 0; }
@@ -634,7 +822,7 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: white;
+    background: var(--bg-surface);
     border: 2px solid var(--border);
     display: flex;
     align-items: center;
@@ -645,238 +833,394 @@
   }
   .timeline-dot.accent {
     border-color: var(--accent);
-    background: var(--accent-light);
+    background: var(--accent-bg);
   }
   .timeline-dot-inner {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
-    background: var(--border-strong);
+    background: var(--text-dim);
   }
   .timeline-dot.accent .timeline-dot-inner { background: var(--accent); }
   .timeline-content {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 2rem;
-    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
   }
   .timeline-meta {
-    font-size: 0.72rem;
-    font-weight: 600;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     color: var(--text-dim);
+    margin-bottom: 0.4rem;
+  }
+  .timeline-content h3 {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    color: var(--text-primary);
     margin-bottom: 0.5rem;
   }
-  .timeline-content h3 { font-size: 0.98rem; margin-bottom: 0.5rem; }
-  .timeline-content p { font-size: 0.875rem; color: var(--text-muted); max-width: none; }
+  .timeline-content p {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
   .friction-tag {
     display: inline-flex;
     align-items: center;
-    margin-top: 0.875rem;
-    font-size: 0.72rem;
+    margin-top: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
     font-weight: 500;
-    padding: 0.25rem 0.65rem;
-    background: var(--red-light);
-    border: 1px solid rgba(239,68,68,0.2);
+    padding: 0.2rem 0.5rem;
+    background: var(--red-bg);
+    border: 1px solid rgba(239,68,68,0.15);
     color: var(--red);
-    border-radius: 100px;
+    border-radius: 2px;
+    letter-spacing: 0.02em;
   }
   .resolve-tag {
     display: inline-flex;
     align-items: center;
-    margin-top: 0.5rem;
-    font-size: 0.72rem;
+    margin-top: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
     font-weight: 500;
-    padding: 0.25rem 0.65rem;
-    background: var(--green-light);
-    border: 1px solid rgba(16,185,129,0.2);
+    padding: 0.2rem 0.5rem;
+    background: var(--green-bg);
+    border: 1px solid rgba(16,185,129,0.15);
     color: var(--green);
-    border-radius: 100px;
+    border-radius: 2px;
+    letter-spacing: 0.02em;
   }
 
-  /* OUTCOME */
+  /* ── OUTCOME ── */
   .outcome-grid {
-    margin-top: 3rem;
+    margin-top: 2rem;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.25rem;
+    gap: 1px;
+    background: var(--border);
   }
   .outcome-cell {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 2.5rem;
-    box-shadow: var(--shadow-sm);
+    background: var(--bg-surface);
+    padding: 2rem;
   }
   .outcome-cell-label {
-    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.08em;
     color: var(--text-dim);
     display: block;
-    margin-bottom: 1.75rem;
+    margin-bottom: 1.5rem;
   }
-  .metric-row {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-  .metric-item { }
+  .metric-row { display: flex; flex-direction: column; gap: 1.25rem; }
   .metric-number {
-    font-family: var(--font-mono);
-    font-size: 2rem;
+    font-family: var(--font-display);
+    font-size: 1.75rem;
     font-weight: 700;
     color: var(--accent);
     line-height: 1;
-    margin-bottom: 0.3rem;
-    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
   }
   .metric-label {
-    font-size: 0.85rem;
-    color: var(--text-muted);
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
   }
-  .quote-block {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-  }
+  .quote-block { display: flex; flex-direction: column; gap: 1rem; }
   .quote-item {
-    padding: 1.5rem;
-    background: var(--bg-subtle);
+    padding: 1.25rem;
+    background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
   }
   .quote-text {
     font-style: italic;
-    font-size: 0.95rem;
-    color: var(--text);
-    line-height: 1.65;
-    margin-bottom: 0.875rem;
-    max-width: none;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    line-height: 1.6;
+    margin-bottom: 0.6rem;
   }
   .quote-attribution {
-    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
     font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     color: var(--text-dim);
   }
   .quote-item.featured {
-    background: var(--accent-light);
-    border-color: rgba(0,97,254,0.2);
+    background: var(--accent-bg);
+    border-color: rgba(168,194,86,0.2);
     border-left: 3px solid var(--accent);
   }
   .quote-item.featured .quote-text {
-    font-size: 1rem;
     font-weight: 500;
+    color: var(--text-primary);
   }
 
-  /* FOOTER */
-  footer {
-    padding: 4rem 0 3rem;
-    border-top: 1px solid var(--border);
-    background: var(--bg-subtle);
-    opacity: 1;
-    transform: none;
+  /* ── HOTSPOT CARD ── */
+  .hotspot-card {
+    position: absolute;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    z-index: 10;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 0.9rem 1.1rem;
+    max-width: 200px;
+    transition: border-color 0.2s;
+    cursor: pointer;
   }
-  .footer-inner {
+  .hotspot-card:hover { border-color: var(--accent); }
+  .hotspot-top {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
   }
-  .footer-name {
-    font-size: 1rem;
+  .hotspot-view {
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .hotspot-arrow {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+  }
+  .hotspot-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.45rem;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+  }
+  .hotspot-title {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
     font-weight: 600;
-    color: var(--text);
-    letter-spacing: -0.01em;
-  }
-  .footer-meta {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    text-align: right;
-    line-height: 1.6;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
   }
 
-  /* SCROLL PROGRESS */
-  .progress-bar {
-    position: fixed;
-    top: 0; left: 0;
-    height: 3px;
-    background: var(--accent);
-    z-index: 200;
-    transition: width 0.1s linear;
-    border-radius: 0 2px 2px 0;
+  /* ── FOOTER BAR ── */
+  .footerbar {
+    grid-area: footer;
+    background: var(--bg-deep);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    z-index: 10;
   }
 
-  @media (max-width: 768px) {
-    nav { padding: 0 1.5rem; }
-    .nav-links { display: none; }
-    .container, .container-wide { padding: 0 1.5rem; }
-    section { padding: 5rem 0; }
+  /* ── MOBILE ── */
+  @media (max-width: 900px) {
+    body {
+      grid-template-rows: var(--topbar-height) auto 1fr var(--footer-height);
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "topbar"
+        "sidebar"
+        "content"
+        "footer";
+      height: 100vh;
+    }
+    .sidebar {
+      flex-direction: row;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    .sidebar-title, .sidebar-legend, .sidebar-footer, .sidebar-divider { display: none; }
+    .sidebar-nav {
+      flex-direction: row;
+      width: max-content;
+    }
+    .sidebar-nav-item {
+      flex-direction: column;
+      padding: 0.5rem 0.9rem;
+      border-left: none;
+      border-bottom: 2px solid transparent;
+      gap: 0.2rem;
+      white-space: nowrap;
+    }
+    .sidebar-nav-item.active {
+      border-bottom-color: var(--accent);
+      border-left-color: transparent;
+    }
+    .nav-index { display: none; }
+    .nav-icon { font-size: 0.7rem; }
+    .nav-label { font-size: 0.6rem; }
+    .edge-text { display: none; }
+    .content-panel { padding: 1.5rem; }
     .signal-grid { grid-template-columns: 1fr; }
     .calc-body { grid-template-columns: 1fr; }
     .tension-wrap { grid-template-columns: 1fr; }
     .tension-vs { display: none; }
     .hypothesis-wrap { grid-template-columns: 1fr; }
     .outcome-grid { grid-template-columns: 1fr; }
+    .home-headline { font-size: 2rem; }
+    .home-bottom { flex-direction: column; gap: 1.5rem; }
+    .hotspot-card { display: none; }
+    .topbar-left, .topbar-right { display: none; }
   }
 </style>
 </head>
 <body>
 
-<div class="progress-bar" id="progress"></div>
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-left">
+    <span class="topbar-compass">&#9678;</span>
+    <span id="live-time">00:00:00 GMT</span>
+  </div>
+  <div class="topbar-center">
+    <span class="topbar-brand">AIDAN O'DEA</span>
+    <span class="topbar-sep">&mdash;</span>
+    <span>VoC CASE STUDY</span>
+  </div>
+  <div class="topbar-right">
+    <span>EST.2024</span>
+    <span class="topbar-sep">&mdash;</span>
+    <span class="topbar-compass">&#9678;</span>
+  </div>
+</header>
 
-<nav>
-  <div class="nav-brand">
-    <div class="nav-logo">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-      </svg>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-title">The Trails of Autosave</div>
+  <nav class="sidebar-nav">
+    <a class="sidebar-nav-item active" data-section="home">
+      <span class="nav-icon">&#9678;</span>
+      <span class="nav-label">Base Camp</span>
+    </a>
+    <a class="sidebar-nav-item" data-section="signal">
+      <span class="nav-icon">&#9733;</span>
+      <span class="nav-label">Signal</span>
+      <span class="nav-index">01</span>
+    </a>
+    <a class="sidebar-nav-item" data-section="commercial">
+      <span class="nav-icon">&#9670;</span>
+      <span class="nav-label">Commercial</span>
+      <span class="nav-index">02</span>
+    </a>
+    <a class="sidebar-nav-item" data-section="priority">
+      <span class="nav-icon">&#9650;</span>
+      <span class="nav-label">Priority</span>
+      <span class="nav-index">03</span>
+    </a>
+    <a class="sidebar-nav-item" data-section="hypothesis">
+      <span class="nav-icon">&#10070;</span>
+      <span class="nav-label">Hypothesis</span>
+      <span class="nav-index">04</span>
+    </a>
+    <a class="sidebar-nav-item" data-section="buyin">
+      <span class="nav-icon">&#9881;</span>
+      <span class="nav-label">Buy-in</span>
+      <span class="nav-index">05</span>
+    </a>
+    <a class="sidebar-nav-item" data-section="outcome">
+      <span class="nav-icon">&#10003;</span>
+      <span class="nav-label">Outcome</span>
+      <span class="nav-index">06</span>
+    </a>
+    <a class="sidebar-nav-item" data-section="reflection">
+      <span class="nav-icon">&#8734;</span>
+      <span class="nav-label">Reflection</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-divider"></div>
+
+  <div class="sidebar-legend">
+    <div class="legend-item">
+      <span class="legend-line" style="background: var(--accent);"></span>
+      Trail
     </div>
-    <div>
-      <div class="nav-label">Aidan O'Dea</div>
-      <div class="nav-subtitle">VoC Case Study</div>
+    <div class="legend-item">
+      <span class="legend-line" style="background: var(--text-dim);"></span>
+      Road
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot" style="background: var(--accent);"></span>
+      Signal
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot" style="background: var(--red);"></span>
+      Friction
     </div>
   </div>
-  <ul class="nav-links">
-    <li><a href="#signal">Signal</a></li>
-    <li><a href="#commercial">Commercial</a></li>
-    <li><a href="#priority">Priority</a></li>
-    <li><a href="#hypothesis">Recommendation</a></li>
-    <li><a href="#buyin">Buy-in</a></li>
-    <li><a href="#outcome">Outcome</a></li>
-  </ul>
-</nav>
 
-<!-- HERO -->
-<section id="hero">
-  <div class="container">
-    <div class="hero-kicker">
-      <span class="kicker-pill" data-tooltip="Capturing structured user feedback to surface unmet needs and friction points.">VoC</span>
-      <span class="kicker-sep">·</span>
-      <span class="kicker-pill" data-tooltip="Translating research findings into prioritised product decisions.">Product Influence</span>
-      <span class="kicker-sep">·</span>
-      <span class="kicker-pill" data-tooltip="Driving meaningful, sustained usage of AI tools within enterprise teams.">GenAI Adoption</span>
-    </div>
-    <h1>Users weren't rejecting<br>the AI. They were <em>abandoning</em> it.</h1>
-    <p>When an enterprise GenAI tool has an adoption problem, the instinct is to build more features. The data pointed elsewhere — to something smaller, and more fundamental: trust in the tool itself.</p>
-    <div class="hero-stat">
-      <div class="hero-stat-number" id="hero-number">0</div>
-      <div class="hero-stat-label">minutes of billable analyst time lost per abandoned session, on average</div>
+  <div class="sidebar-footer">
+    <div class="sidebar-credit">Aidan O'Dea</div>
+    <div class="sidebar-social">
+      <a href="https://www.linkedin.com/in/aidanodea/" target="_blank">LI</a>
+      <a href="https://aidanodea.substack.com/" target="_blank">SUB</a>
+      <a href="mailto:aidan@aidanodea.com">EMAIL</a>
     </div>
   </div>
-</section>
+</aside>
 
-<!-- SIGNAL -->
-<section id="signal">
-  <div class="container-wide">
-    <div class="section-index">01 / 07</div>
-    <div class="section-tag">Signal Discovery</div>
-    <h2>Three signals. One story.</h2>
-    <p>Good VoC doesn't start with a survey. It starts with paying attention. The case for autosave was assembled from three independent sources — none of which were designed to surface this problem.</p>
+<!-- EDGE TEXT -->
+<div class="edge-text edge-text--left">VOICE OF CUSTOMER PURVEYORS</div>
+<div class="edge-text edge-text--right">DATA-DRIVEN DESIGN &mdash; HAND-CRAFTED</div>
+
+<!-- CONTENT AREA -->
+<main class="content-area">
+
+  <!-- HOME / HERO -->
+  <div class="content-panel active" id="panel-home">
+    <div class="home-layout">
+      <div class="home-top">
+        <div class="home-kicker">
+          <span class="kicker-pill">VoC</span>
+          <span class="kicker-sep">&middot;</span>
+          <span class="kicker-pill">Product Influence</span>
+          <span class="kicker-sep">&middot;</span>
+          <span class="kicker-pill">GenAI Adoption</span>
+        </div>
+        <h1 class="home-headline">Users weren't rejecting<br>the AI. They were <em>abandoning</em> it.</h1>
+        <p class="home-desc">When an enterprise GenAI tool has an adoption problem, the instinct is to build more features. The data pointed elsewhere — to something smaller, and more fundamental: trust in the tool itself.</p>
+      </div>
+      <div class="home-bottom">
+        <div class="home-stat">
+          <div class="home-stat-number" id="hero-number">0</div>
+          <div class="home-stat-label">minutes of billable analyst time lost per abandoned session, on average</div>
+        </div>
+        <div class="home-tagline">A case for <span>fixing the floor</span> before raising the ceiling</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIGNAL -->
+  <div class="content-panel" id="panel-signal">
+    <div class="panel-index">01 / 07</div>
+    <div class="panel-tag">Signal Discovery</div>
+    <h2 class="panel-heading">Three signals. One story.</h2>
+    <p class="panel-text">Good VoC doesn't start with a survey. It starts with paying attention. The case for autosave was assembled from three independent sources — none of which were designed to surface this problem.</p>
 
     <div class="signal-grid">
       <div class="signal-cell">
@@ -906,21 +1250,19 @@
       <p>Three independent signals — qualitative, behavioural, and corroborating — all pointing at the same failure mode. At this point, the question wasn't whether the problem existed. It was whether it was worth solving.</p>
     </div>
   </div>
-</section>
 
-<!-- COMMERCIAL -->
-<section id="commercial">
-  <div class="container-wide">
-    <div class="section-index">02 / 07</div>
-    <div class="section-tag">Commercial Frame</div>
-    <h2>Making the cost of inaction visible.</h2>
-    <p>The instinct in product conversations is to frame features in terms of what they add. This case was built in reverse — quantifying what inaction was costing, in terms the business already understood: billable time.</p>
-    <p>Using rate card data and telemetry, each abandoned session could be given a rough cost. Aggregate that across the user base and the frequency of abandonment, and the number becomes hard to ignore.</p>
+  <!-- COMMERCIAL -->
+  <div class="content-panel" id="panel-commercial">
+    <div class="panel-index">02 / 07</div>
+    <div class="panel-tag">Commercial Frame</div>
+    <h2 class="panel-heading">Making the cost of inaction visible.</h2>
+    <p class="panel-text">The instinct in product conversations is to frame features in terms of what they add. This case was built in reverse — quantifying what inaction was costing, in terms the business already understood: billable time.</p>
+    <p class="panel-text">Using rate card data and telemetry, each abandoned session could be given a rough cost. Aggregate that across the user base and the frequency of abandonment, and the number becomes hard to ignore.</p>
 
     <div class="calculator">
       <div class="calc-header">
-        <span class="calc-header-label">Commercial Calculator — Cost of Inaction</span>
-        <span class="calc-header-sub">Adjust inputs to model your scenario</span>
+        <span class="calc-header-label">Cost of Inaction Calculator</span>
+        <span class="calc-header-sub">Adjust inputs to model</span>
       </div>
       <div class="calc-body">
         <div class="calc-inputs">
@@ -965,15 +1307,13 @@
       </div>
     </div>
   </div>
-</section>
 
-<!-- PRIORITY TENSION -->
-<section id="priority">
-  <div class="container-wide">
-    <div class="section-index">03 / 07</div>
-    <div class="section-tag">The Competing Priority Problem</div>
-    <h2>The backlog wasn't empty.<br>It was pointed the wrong way.</h2>
-    <p>The product team had a clear direction: build towards the AI-powered capabilities that were part of the broader platform promise. Autosave wasn't glamorous. It wasn't part of any demo. The challenge was reframing the conversation — not from features to features, but from adoption to value.</p>
+  <!-- PRIORITY TENSION -->
+  <div class="content-panel" id="panel-priority">
+    <div class="panel-index">03 / 07</div>
+    <div class="panel-tag">The Competing Priority Problem</div>
+    <h2 class="panel-heading">The backlog wasn't empty.<br>It was pointed the <em>wrong way.</em></h2>
+    <p class="panel-text">The product team had a clear direction: build towards the AI-powered capabilities that were part of the broader platform promise. Autosave wasn't glamorous. It wasn't part of any demo. The challenge was reframing the conversation — not from features to features, but from adoption to value.</p>
 
     <div class="tension-wrap">
       <div class="tension-col">
@@ -991,11 +1331,11 @@
       <div class="tension-vs">
         <div class="tension-vs-label">vs</div>
       </div>
-      <div class="tension-col right">
+      <div class="tension-col">
         <div class="tension-label green"><span class="dot"></span>What the data was saying</div>
         <h3>Users weren't staying long enough to use any of it</h3>
         <p>Adoption was the primary commercial commitment to the client. Without users in the tool, the platform's AI capabilities were irrelevant. The most advanced feature in a tool no one trusts is worthless.</p>
-        <p style="margin-top: 0.75rem;">The argument wasn't that autosave was more important than AI. It was that <strong style="color: var(--text); font-weight: 600;">autosave was a precondition for AI</strong> — you can't unlock value from a tool users won't stay in.</p>
+        <p style="margin-top: 0.6rem;">The argument wasn't that autosave was more important than AI. It was that <strong style="color: var(--text-primary); font-weight: 600;">autosave was a precondition for AI</strong> — you can't unlock value from a tool users won't stay in.</p>
       </div>
     </div>
 
@@ -1003,39 +1343,35 @@
       <p>"You can't realise value from a feature users never reach. Adoption isn't a soft metric — it's the delivery vehicle for everything else we're building. We need to fix the floor before we can raise the ceiling."</p>
     </div>
   </div>
-</section>
 
-<!-- HYPOTHESIS / RECOMMENDATION -->
-<section id="hypothesis">
-  <div class="container-wide">
-    <div class="section-index">04 / 07</div>
-    <div class="section-tag">The Recommendation</div>
-    <h2>A hypothesis, not a feature request.</h2>
-    <p>The recommendation to the product owner was framed as a testable proposition — not a gut feeling, but a structured argument built on triangulated evidence and a quantified business case.</p>
+  <!-- HYPOTHESIS / RECOMMENDATION -->
+  <div class="content-panel" id="panel-hypothesis">
+    <div class="panel-index">04 / 07</div>
+    <div class="panel-tag">The Recommendation</div>
+    <h2 class="panel-heading">A hypothesis, not a feature request.</h2>
+    <p class="panel-text">The recommendation to the product owner was framed as a testable proposition — not a gut feeling, but a structured argument built on triangulated evidence and a quantified business case.</p>
 
     <div class="hypothesis-wrap">
       <div class="hypo-cell">
         <span class="hypo-label">The hypothesis</span>
         <div class="hypothesis-statement">"If users trust the tool not to lose their work, they will stay in it longer — and adoption, our primary commercial metric, will follow."</div>
       </div>
-      <div class="hypo-cell" style="background: var(--accent-light); border-color: rgba(0,97,254,0.2);">
+      <div class="rec-cell">
         <span class="rec-label">The recommendation</span>
-        <p style="font-size: 0.92rem; max-width: none; color: var(--text);">Prioritise autosave above the next scheduled AI feature release. The cost of the fix is a one-time development investment. The cost of not fixing it is accumulating weekly, measurably, and directly undermining our adoption commitments to the client.</p>
-        <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 0.75rem; max-width: none;">Evidence base: user drop-in observations, session abandonment telemetry, duplicate deliverable analysis, rate card commercial model.</p>
+        <p>Prioritise autosave above the next scheduled AI feature release. The cost of the fix is a one-time development investment. The cost of not fixing it is accumulating weekly, measurably, and directly undermining our adoption commitments to the client.</p>
+        <p>Evidence base: user drop-in observations, session abandonment telemetry, duplicate deliverable analysis, rate card commercial model.</p>
       </div>
     </div>
   </div>
-</section>
 
-<!-- BUY-IN -->
-<section id="buyin">
-  <div class="container-wide">
-    <div class="section-index">05 / 07</div>
-    <div class="section-tag">Getting Buy-in</div>
-    <h2>The path from evidence to decision.</h2>
-    <p>The business case moved through three conversations — product owner, senior leadership, and the cross-discipline delivery team. Each required a different framing of the same core argument.</p>
+  <!-- BUY-IN -->
+  <div class="content-panel" id="panel-buyin">
+    <div class="panel-index">05 / 07</div>
+    <div class="panel-tag">Getting Buy-in</div>
+    <h2 class="panel-heading">The path from evidence to decision.</h2>
+    <p class="panel-text">The business case moved through three conversations — product owner, senior leadership, and the cross-discipline delivery team. Each required a different framing of the same core argument.</p>
 
-    <div class="timeline" style="margin-top: 3rem;">
+    <div class="timeline">
       <div class="timeline-line"></div>
 
       <div class="timeline-item">
@@ -1046,7 +1382,7 @@
           <div class="timeline-meta">Stage 01 — Product Owner</div>
           <h3>Initial pushback on priority</h3>
           <p>The product owner's initial response was predictable: autosave wasn't in the roadmap, the sprint was already committed, and the AI feature pipeline had client visibility. The commercial model changed the conversation — not because the number was enormous, but because it was real. Quantified waste in a cost-conscious delivery context is harder to defer than a user complaint.</p>
-          <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem;">
+          <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem;">
             <span class="friction-tag">Friction: roadmap commitment, sprint velocity</span>
             <span class="resolve-tag">Resolved via: commercial model + adoption risk framing</span>
           </div>
@@ -1061,7 +1397,7 @@
           <div class="timeline-meta">Stage 02 — Senior Leadership</div>
           <h3>Reframing for the room</h3>
           <p>Leadership weren't interested in a feature comparison. The message was stripped back: our AI-enabled delivery promise to the client is contingent on user adoption. Adoption is at risk. Here is the evidence. Here is the cost. Here is the fix. The autosave framing was replaced entirely — this was presented as an adoption intervention, not a technical patch.</p>
-          <div style="margin-top: 0.75rem;">
+          <div style="margin-top: 0.6rem;">
             <span class="resolve-tag">Resolved via: adoption risk → client commitment narrative</span>
           </div>
         </div>
@@ -1075,23 +1411,21 @@
           <div class="timeline-meta">Stage 03 — Cross-Discipline Delivery Team</div>
           <h3>Translating the case into requirements</h3>
           <p>With prioritisation secured, the role shifted to requirements translation — working across engineering, UX, and QA to ensure the implementation addressed the actual failure mode identified in the telemetry. The risk was building a technical autosave that didn't match the user's mental model of when and how saves occurred. Drop-in session insights were used directly to shape acceptance criteria.</p>
-          <div style="margin-top: 0.75rem;">
+          <div style="margin-top: 0.6rem;">
             <span class="resolve-tag">Role: requirements translator, acceptance tester, user proxy</span>
           </div>
         </div>
       </div>
     </div>
   </div>
-</section>
 
-<!-- OUTCOME -->
-<section id="outcome">
-  <div class="container-wide">
-    <div class="section-index">06 / 07</div>
-    <div class="section-tag">The Outcome</div>
-    <h2>The hypothesis held.</h2>
-    <p>Post-release telemetry and a follow-up drop-in session confirmed the expected pattern: session duration increased, abandonment rates fell, and the duplicate deliverable signature — the clearest signal of rework — dropped measurably.</p>
-    <p>The most significant feedback wasn't a metric. It was a behavioural shift.</p>
+  <!-- OUTCOME -->
+  <div class="content-panel" id="panel-outcome">
+    <div class="panel-index">06 / 07</div>
+    <div class="panel-tag">The Outcome</div>
+    <h2 class="panel-heading">The hypothesis held.</h2>
+    <p class="panel-text">Post-release telemetry and a follow-up drop-in session confirmed the expected pattern: session duration increased, abandonment rates fell, and the duplicate deliverable signature — the clearest signal of rework — dropped measurably.</p>
+    <p class="panel-text">The most significant feedback wasn't a metric. It was a behavioural shift.</p>
 
     <div class="outcome-grid">
       <div class="outcome-cell">
@@ -1126,49 +1460,62 @@
       </div>
     </div>
   </div>
-</section>
 
-<!-- REFLECTION -->
-<section id="reflection">
-  <div class="container-wide">
-    <div class="section-tag">Methodology Reflection</div>
-    <h2>What this case was really about.</h2>
-    <p>Autosave was never the point. The point was demonstrating that user insight, when properly triangulated and commercially translated, can move a product decision that pure intuition or stakeholder preference cannot.</p>
-    <p>The VoC methodology here wasn't a formal research programme — it was disciplined observation, systematic corroboration, and the willingness to build a quantified argument from signals others had dismissed as anecdotal.</p>
-    <p>In a context where AI adoption is both the promise and the pressure, the ability to identify and elevate the right problem — not the flashiest one — is where real value realisation work happens.</p>
+  <!-- REFLECTION -->
+  <div class="content-panel" id="panel-reflection">
+    <div class="panel-tag">Methodology Reflection</div>
+    <h2 class="panel-heading">What this case was really about.</h2>
+    <p class="panel-text">Autosave was never the point. The point was demonstrating that user insight, when properly triangulated and commercially translated, can move a product decision that pure intuition or stakeholder preference cannot.</p>
+    <p class="panel-text">The VoC methodology here wasn't a formal research programme — it was disciplined observation, systematic corroboration, and the willingness to build a quantified argument from signals others had dismissed as anecdotal.</p>
+    <p class="panel-text">In a context where AI adoption is both the promise and the pressure, the ability to identify and elevate the right problem — not the flashiest one — is where real value realisation work happens.</p>
   </div>
-</section>
 
-<footer>
-  <div class="container">
-    <div class="footer-inner">
-      <div class="footer-name">Aidan O'Dea</div>
-      <div class="footer-meta">
-        Value Realisation · GenAI Adoption<br>
-        VoC Case Study — Autosave Feature
-      </div>
+  <!-- HOTSPOT CARD -->
+  <div class="hotspot-card" data-section="outcome">
+    <div class="hotspot-top">
+      <span class="hotspot-view">View More</span>
+      <span class="hotspot-arrow">&#8599;</span>
     </div>
+    <span class="hotspot-label">Latest Signal Added</span>
+    <span class="hotspot-title">↓ 40%</span>
   </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="footerbar">
+  <span>72PX | 54PT</span>
+  <span>VoC &bull; PRODUCT INFLUENCE</span>
+  <span>&copy;2024 &mdash; AIDAN O'DEA</span>
+  <span>GENAI ADOPTION</span>
 </footer>
 
 <script>
-// Scroll progress
-const progress = document.getElementById('progress');
-window.addEventListener('scroll', () => {
-  const scrolled = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
-  progress.style.width = scrolled + '%';
+// Section switching
+document.querySelectorAll('[data-section]').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const target = link.dataset.section;
+    document.querySelectorAll('.sidebar-nav-item').forEach(n =>
+      n.classList.toggle('active', n.dataset.section === target)
+    );
+    document.querySelectorAll('.content-panel').forEach(p =>
+      p.classList.toggle('active', p.id === 'panel-' + target)
+    );
+  });
 });
 
-// Intersection observer for section reveals
-const sections = document.querySelectorAll('section:not(#hero)');
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-    }
-  });
-}, { threshold: 0.08 });
-sections.forEach(s => observer.observe(s));
+// Live clock
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getUTCHours()).padStart(2, '0');
+  const m = String(now.getUTCMinutes()).padStart(2, '0');
+  const s = String(now.getUTCSeconds()).padStart(2, '0');
+  const el = document.getElementById('live-time');
+  if (el) el.textContent = h + ':' + m + ':' + s + ' GMT';
+}
+setInterval(updateClock, 1000);
+updateClock();
 
 // Hero number count-up
 function countUp(el, target, duration) {
